@@ -1,6 +1,6 @@
 // Offline support: serve from cache, refresh the cache in the background
 // (stale-while-revalidate), so a new version shows up on the next launch.
-const CACHE = 'chain-v2';
+const CACHE = 'chain-v3';
 const SHELL = [
   './',
   'index.html',

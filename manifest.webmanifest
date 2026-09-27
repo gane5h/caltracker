@@ -1,6 +1,6 @@
 {
-  "name": "Chain",
-  "short_name": "Chain",
+  "name": "5F tracker",
+  "short_name": "5F tracker",
   "description": "Don't break the chain: tap to check in every day.",
   "start_url": "./",
   "scope": "./",
