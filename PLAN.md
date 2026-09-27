@@ -85,7 +85,7 @@ Original art in a similar *style*; no copied game assets or branding.
 
 - The exercise names column stays fixed on the left. Each exercise has a small
   animated figure next to its name.
-- **Tap a cell** → check in or undo. **Long-press an exercise name** → the exercise card.
+- **Tap a cell** → check in or undo. **Tap an exercise name** → the exercise card.
 - Future days are dimmed and can't be tapped. Past days can be edited, so a
   forgotten check-in can be filled in.
 - Swipe left or right to see earlier weeks.
@@ -130,9 +130,10 @@ The same model works for every tab, so Diet and Finances need no new code.
 
 ```js
 tab      = { id, sections: [section] }
-section  = { id, name, subtitle, emoji, items: [item] }
-item     = { id, name }
+section  = { id, name, subtitle, emoji, archived?, items: [item] }
+item     = { id, name, exercise?, archived? }   // exercise → js/exercises.js
 checkIns = { [itemId]: { 'YYYY-MM-DD': true } }   // localStorage 'chain/check-ins'
+tabs     = { [tabId]: tab }                        // localStorage 'chain/tabs', once edited
 ```
 
 ### Chain rules
@@ -153,7 +154,11 @@ manifest.webmanifest    PWA metadata (name, icons, colours)
 sw.js                   service worker: offline cache, updates in the background
 css/app.css             theme tokens, chunky 3D styles, animations
 js/app.js               rendering, tap handling, week nav, tabs
-js/data.js              sections and exercises
+js/data.js              starting sections and exercises
+js/exercises.js         exercise library: poses, muscles, form tips
+js/figures.js           figure rig, keyframe generator, muscle map
+js/layout.js            pure edits: add, move, archive …
+js/backup.js            JSON export/import format
 js/store.js             check-ins in localStorage
 js/streaks.js           streak math (pure, unit-tested)
 js/dates.js             local-time week math
@@ -200,6 +205,13 @@ and optional cloud sync.
       streak chips, streak unit tests across timezones and DST
 - [x] Milestone 4: squash-and-stretch check-in, gentler undo, section-clear shine and
       stamp, 7/30/100-day trophy card (each chain celebrates a milestone once)
-- [ ] Milestone 5: exercise infographics
-- [ ] Milestone 6: in-app editing and export
+- [x] Milestone 5: figure rig (`js/figures.js`) that turns poses into SVG and CSS
+      keyframes and keeps standing figures' feet planted; 10 exercise animations; mini
+      figures in the grid; front/back muscle map; exercise card (tap an exercise name)
+      with streaks, best streak, form tips and a 12-week heatmap
+- [x] Milestone 6: edit mode to add, rename, reorder, move, archive and restore
+      sections and exercises, pick an animation for each; JSON export and import
+- [ ] Daily reminder (optional, milestone 7): not built. Without a server, Android
+      only offers Periodic Background Sync, which fires when Chrome decides (often
+      hours late), so it can't promise "remind me at 8pm"
 - [x] Milestone 7: GitHub Pages + installable PWA with offline support

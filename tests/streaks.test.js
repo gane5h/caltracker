@@ -81,3 +81,11 @@ for (const [zone, ...transitions] of ZONES) {
     assert.equal(currentStreak(doneOn(lateSat, earlySun), earlySun).length, 2);
   });
 }
+
+test('longest streak finds the best run, across month and DST boundaries', async () => {
+  const { longestStreak } = await import('../js/streaks.js');
+  assert.equal(longestStreak([]), 0);
+  assert.equal(longestStreak(['2026-09-01']), 1);
+  assert.equal(longestStreak([...run(2026, 3, 1, 4), ...run(2026, 3, 27, 9)].sort()), 9); // spans Mar 29 (EU DST)
+  assert.equal(longestStreak(['2026-02-27', '2026-02-28', '2026-03-01', '2026-03-03']), 3);
+});

@@ -1,7 +1,12 @@
+import { backupFileName, describeBackup, makeBackup, parseBackup } from './backup.js';
 import { fitnessTab } from './data.js';
 import { addDays, formatWeekRange, fromDayKey, startOfWeek, toDayKey, weekDays, WEEKDAY_LETTERS } from './dates.js';
-import { claimCelebration, isChecked, toggle } from './store.js';
-import { currentStreak, milestoneCrossed } from './streaks.js';
+import { EXERCISES, MUSCLE_NAMES } from './exercises.js';
+import { figureCss, figureSvg, muscleMapSvg } from './figures.js';
+import * as layout from './layout.js';
+import { activeItems, activeSections, everyItem } from './layout.js';
+import { checkedDays, claimCelebration, isChecked, loadTab, restore, saveTab, snapshot, toggle } from './store.js';
+import { currentStreak, longestStreak, milestoneCrossed } from './streaks.js';
 
 const el = (tag, props = {}, ...children) => {
   const node = Object.assign(document.createElement(tag), props);
@@ -19,17 +24,37 @@ const starSvg = (className) => {
   return svg;
 };
 
+/** An element built from an HTML string we generated ourselves (figures, muscle maps). */
+const html = (tag, className, markup) => {
+  const node = el(tag, { className });
+  node.innerHTML = markup;
+  return node;
+};
+
+document.head.append(el('style', { textContent: figureCss() }));
+
 // ---- Fitness screen state ----
 const screen = document.getElementById('screen-fitness');
 const board = screen.querySelector('.board');
-const state = { todayKey: toDayKey(new Date()), weekOffset: 0, collapsed: new Set() };
+const state = { todayKey: toDayKey(new Date()), weekOffset: 0, collapsed: new Set(), editing: false };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const allItems = fitnessTab.sections.flatMap((s) => s.items);
+let tab = loadTab('fitness', fitnessTab);
+
+/** Applies a layout edit, saves it and redraws. */
+function edit(next) {
+  tab = next;
+  saveTab(tab);
+  render();
+}
 
 const weekStart = () => addDays(startOfWeek(fromDayKey(state.todayKey)), state.weekOffset * 7);
 const itemDone = (item) => (day) => isChecked(item.id, day);
-const sectionDone = (section) => (day) => section.items.every((it) => isChecked(it.id, day));
-const tabDone = (day) => allItems.some((it) => isChecked(it.id, day));
+const sectionDone = (section) => (day) => {
+  const items = activeItems(section);
+  return items.length > 0 && items.every((it) => isChecked(it.id, day));
+};
+// Archived items still count, so archiving never breaks a past chain.
+const tabDone = (day) => everyItem(tab).some((it) => isChecked(it.id, day));
 const chain = () => currentStreak(tabDone, state.todayKey);
 
 /** Restarts a one-shot CSS animation class. */
@@ -55,6 +80,14 @@ function makeStreakChip(className) {
 }
 
 function render() {
+  screen.classList.toggle('editing', state.editing);
+  screen.querySelector('.edit-toggle').textContent = state.editing ? '✅ DONE' : '✏️ EDIT EXERCISES';
+  if (state.editing) {
+    renderEditor();
+    updateWeekTotal(weekDays(weekStart()).map(toDayKey), false);
+    updateChain(false);
+    return;
+  }
   const days = weekDays(weekStart()).map(toDayKey);
   const showsToday = days.includes(state.todayKey);
   const isCurrent = state.weekOffset === 0;
@@ -76,7 +109,7 @@ function render() {
     grid.append(head);
   });
 
-  for (const section of fitnessTab.sections) {
+  for (const section of activeSections(tab)) {
     const collapsed = state.collapsed.has(section.id);
     const badge = el('span', { className: 'badge' });
     badge.hidden = !showsToday;
@@ -103,9 +136,10 @@ function render() {
     grid.append(ribbon);
 
     const updateSection = (animate) => {
-      const done = section.items.filter((it) => isChecked(it.id, state.todayKey)).length;
-      badge.textContent = `${done}/${section.items.length}`;
-      badge.classList.toggle('cleared', done === section.items.length);
+      const items = activeItems(section);
+      const done = items.filter((it) => isChecked(it.id, state.todayKey)).length;
+      badge.textContent = `${done}/${items.length}`;
+      badge.classList.toggle('cleared', items.length > 0 && done === items.length);
       sectionStreak.update(currentStreak(sectionDone(section), state.todayKey), animate);
     };
     updateSection(false);
@@ -116,10 +150,17 @@ function render() {
     };
 
     if (collapsed) continue;
-    for (const item of section.items) {
+    for (const item of activeItems(section)) {
       const itemStreak = makeStreakChip('item-streak');
       itemStreak.update(currentStreak(itemDone(item), state.todayKey), false);
-      grid.append(el('div', { className: 'item-name' }, el('span', {}, item.name), itemStreak));
+      const name = el(
+        'button',
+        { className: 'item-name', title: `How to do ${item.name}` },
+        miniFigure(item),
+        el('span', { className: 'item-text' }, el('span', {}, item.name), itemStreak),
+      );
+      name.addEventListener('click', () => openExercise(item));
+      grid.append(name);
       const onItemToggle = (day, nowChecked) => {
         itemStreak.update(currentStreak(itemDone(item), state.todayKey), true);
         onToggle(day, nowChecked);
@@ -240,7 +281,8 @@ function updateChain(animate) {
 }
 
 function updateWeekTotal(days, animate) {
-  const total = allItems.reduce((n, it) => n + days.filter((d) => isChecked(it.id, d)).length, 0);
+  const shown = activeSections(tab).flatMap(activeItems);
+  const total = shown.reduce((n, it) => n + days.filter((d) => isChecked(it.id, d)).length, 0);
   const counter = screen.querySelector('.week-counter');
   counter.querySelector('.week-total').textContent = String(total);
   counter.setAttribute('aria-label', `${total} check-ins this week`);
@@ -260,7 +302,7 @@ screen.querySelector('.to-today').addEventListener('click', () => changeWeek(-st
 
 // Horizontal swipe on the board changes week.
 let touchStart = null;
-board.addEventListener('touchstart', (e) => (touchStart = e.touches[0]), { passive: true });
+board.addEventListener('touchstart', (e) => (touchStart = state.editing ? null : e.touches[0]), { passive: true });
 board.addEventListener('touchend', (e) => {
   if (!touchStart) return;
   const dx = e.changedTouches[0].clientX - touchStart.clientX;
@@ -277,6 +319,294 @@ document.addEventListener('visibilitychange', () => {
     state.todayKey = today;
     render();
   }
+});
+
+// ---- Exercise figures and the exercise card ----
+function miniFigure(item) {
+  const svg = figureSvg(item.exercise);
+  return svg ? html('span', 'mini-fig', svg) : el('span', { className: 'mini-fig empty', ariaHidden: 'true' }, '⭐');
+}
+
+const exerciseSheet = document.getElementById('exercise-sheet');
+
+/** The last 12 weeks as columns of Mon–Sun cells, current week last. */
+function heatmap(item) {
+  const start = addDays(startOfWeek(fromDayKey(state.todayKey)), -11 * 7);
+  const grid = el('div', { className: 'heatmap', role: 'img' });
+  let count = 0;
+  for (let w = 0; w < 12; w++) {
+    for (let d = 0; d < 7; d++) {
+      const day = toDayKey(addDays(start, w * 7 + d));
+      const on = isChecked(item.id, day);
+      count += on;
+      const cls = on ? ' on' : day > state.todayKey ? ' future' : '';
+      grid.append(el('span', { className: 'heat' + cls + (day === state.todayKey ? ' today' : '') }));
+    }
+  }
+  grid.setAttribute('aria-label', `${count} check-ins in the last 12 weeks`);
+  return grid;
+}
+
+const stat = (value, label) => el('div', { className: 'stat' }, el('span', { className: 'stat-value game-text' }, value), el('span', { className: 'stat-label' }, label));
+
+function openExercise(item) {
+  const ex = EXERCISES[item.exercise];
+  const days = checkedDays(item.id);
+  const current = currentStreak(itemDone(item), state.todayKey);
+  const card = exerciseSheet.querySelector('.sheet-body');
+
+  const figure = ex
+    ? html('div', 'hero-fig', figureSvg(item.exercise))
+    : el('div', { className: 'hero-fig empty' }, el('span', { className: 'emoji' }, '⭐'), el('p', {}, 'No animation yet. Pick one in Edit exercises.'));
+
+  const parts = [
+    el('h2', { className: 'sheet-title game-text', id: 'exercise-title' }, item.name.toUpperCase()),
+    figure,
+    el(
+      'div',
+      { className: 'stats' },
+      stat(`🔥 ${current.length}`, current.todayDone || current.length === 0 ? 'current streak' : 'check in today!'),
+      stat(String(longestStreak(days)), 'best streak'),
+      stat(String(days.length), 'total days'),
+    ),
+  ];
+
+  if (ex) {
+    const map = html('div', 'muscles', muscleMapSvg(ex.muscles));
+    const named = (ids) => ids.map((id) => MUSCLE_NAMES[id]).join(', ');
+    map.querySelector('svg').setAttribute('aria-label', `Works ${named(ex.muscles.primary)}; also ${named(ex.muscles.secondary)}`);
+    const chip = (role, id) => el('span', { className: `chip ${role}` }, MUSCLE_NAMES[id]);
+    parts.push(
+      el('h3', { className: 'sheet-heading' }, 'MUSCLES WORKED'),
+      map,
+      el('div', { className: 'map-labels', ariaHidden: 'true' }, el('span', {}, 'FRONT'), el('span', {}, 'BACK')),
+      el('div', { className: 'chips' }, ...ex.muscles.primary.map((id) => chip('primary', id)), ...ex.muscles.secondary.map((id) => chip('secondary', id))),
+      el('h3', { className: 'sheet-heading' }, 'FORM TIPS'),
+      el('ol', { className: 'tips' }, ...ex.tips.map((t) => el('li', {}, t))),
+    );
+  }
+  parts.push(
+    el('h3', { className: 'sheet-heading' }, 'LAST 12 WEEKS'),
+    heatmap(item),
+    el('div', { className: 'heat-labels', ariaHidden: 'true' }, el('span', {}, '12 weeks ago'), el('span', {}, 'this week')),
+  );
+  card.replaceChildren(...parts);
+  exerciseSheet.showModal();
+  exerciseSheet.querySelector('.sheet-card').scrollTop = 0;
+}
+
+// Every sheet closes from its ✕ button or a tap on the backdrop; Android's back button closes it too.
+document.querySelectorAll('dialog.sheet').forEach((sheet) => {
+  sheet.querySelector('.sheet-close').addEventListener('click', () => sheet.close());
+  sheet.addEventListener('click', (e) => e.target === sheet && sheet.close());
+});
+
+// ---- Edit mode ----
+const formSheet = document.getElementById('form-sheet');
+
+/**
+ * Shows a small form in a bottom sheet. `fields` are text inputs or selects;
+ * `onSubmit(values)` runs on the primary button. `extra` adds buttons such as Archive.
+ */
+function openForm({ title, message, fields = [], primary, onSubmit, extra = [] }) {
+  const form = el('form', { className: 'form', method: 'dialog' });
+  form.append(el('h2', { className: 'sheet-title game-text', id: 'form-title' }, title));
+  if (message) form.append(el('p', { className: 'form-msg' }, message));
+  for (const f of fields) {
+    const id = `field-${f.name}`;
+    const input =
+      f.options
+        ? el('select', { id, name: f.name }, ...f.options.map(([value, label]) => el('option', { value, selected: value === (f.value ?? '') }, label)))
+        : el('input', { id, name: f.name, type: 'text', value: f.value ?? '', maxLength: f.maxLength ?? 40, required: f.required ?? false, autocomplete: 'off', placeholder: f.placeholder ?? '' });
+    form.append(el('label', { className: 'field', htmlFor: id }, el('span', {}, f.label), input));
+  }
+  const buttons = el('div', { className: 'form-buttons' });
+  for (const b of extra) {
+    const btn = el('button', { type: 'button', className: `chunky-btn ${b.className ?? ''}` }, b.label);
+    btn.addEventListener('click', () => {
+      formSheet.close();
+      b.onClick();
+    });
+    buttons.append(btn);
+  }
+  buttons.append(el('button', { type: 'submit', className: 'chunky-btn primary' }, primary));
+  form.append(buttons);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const values = Object.fromEntries([...new FormData(form)].map(([k, v]) => [k, String(v).trim()]));
+    if (fields.some((f) => f.required && !values[f.name])) return;
+    formSheet.close();
+    onSubmit(values);
+  });
+  formSheet.querySelector('.sheet-body').replaceChildren(form);
+  formSheet.showModal();
+}
+
+const animationOptions = () => [['', 'None'], ...Object.entries(EXERCISES).map(([id, ex]) => [id, ex.name])];
+
+function itemForm(section, item) {
+  const fields = [
+    { name: 'name', label: 'Name', value: item?.name, required: true, placeholder: 'e.g. Push-ups' },
+    { name: 'exercise', label: 'Animation', value: item?.exercise ?? '', options: animationOptions() },
+  ];
+  if (item && activeSections(tab).length > 1) {
+    fields.push({ name: 'sectionId', label: 'Section', value: section.id, options: activeSections(tab).map((s) => [s.id, `${s.emoji} ${s.name} · ${s.subtitle}`]) });
+  }
+  openForm({
+    title: item ? 'EDIT EXERCISE' : 'NEW EXERCISE',
+    fields,
+    primary: item ? 'SAVE' : 'ADD',
+    extra: item ? [{ label: 'ARCHIVE', className: 'danger', onClick: () => edit(layout.setArchived(tab, 'item', item.id, true)) }] : [],
+    onSubmit: (v) => {
+      if (item) return edit(layout.updateItem(tab, item.id, v));
+      // A new exercise named like one in the library gets its animation automatically.
+      const match = Object.keys(EXERCISES).find((id) => EXERCISES[id].name.toLowerCase() === v.name.toLowerCase());
+      edit(layout.addItem(tab, section.id, { ...v, exercise: v.exercise || match }));
+    },
+  });
+}
+
+function sectionForm(section) {
+  openForm({
+    title: section ? 'EDIT SECTION' : 'NEW SECTION',
+    fields: [
+      { name: 'name', label: 'Name', value: section?.name, required: true, placeholder: 'e.g. Core' },
+      { name: 'subtitle', label: 'Subtitle', value: section?.subtitle, placeholder: 'e.g. Abs · Stability' },
+      { name: 'emoji', label: 'Emoji', value: section?.emoji ?? '⭐', maxLength: 8 },
+    ],
+    primary: section ? 'SAVE' : 'ADD',
+    extra: section ? [{ label: 'ARCHIVE', className: 'danger', onClick: () => edit(layout.setArchived(tab, 'section', section.id, true)) }] : [],
+    onSubmit: (v) => {
+      const values = { ...v, emoji: v.emoji || '⭐' };
+      edit(section ? layout.updateSection(tab, section.id, values) : layout.addSection(tab, values));
+    },
+  });
+}
+
+function moveButtons(onMove, index, count, label) {
+  const up = el('button', { className: 'mini-btn', ariaLabel: `Move ${label} up`, disabled: index === 0 }, '▲');
+  const down = el('button', { className: 'mini-btn', ariaLabel: `Move ${label} down`, disabled: index === count - 1 }, '▼');
+  up.addEventListener('click', () => onMove(-1));
+  down.addEventListener('click', () => onMove(1));
+  return [up, down];
+}
+
+function renderEditor() {
+  const editor = el('div', { className: 'editor' });
+  const sections = activeSections(tab);
+
+  sections.forEach((section, si) => {
+    const open = el(
+      'button',
+      { className: 'edit-open ribbon-look', ariaLabel: `Edit section ${section.name}` },
+      el('span', { className: 'emoji' }, section.emoji),
+      el('span', { className: 'ribbon-text' }, el('span', { className: 'ribbon-name' }, section.name.toUpperCase()), el('span', { className: 'ribbon-sub' }, section.subtitle)),
+      el('span', { className: 'pencil', ariaHidden: 'true' }, '✏️'),
+    );
+    open.addEventListener('click', () => sectionForm(section));
+    const block = el('div', { className: 'edit-section' }, el('div', { className: 'edit-head' }, open, ...moveButtons((d) => edit(layout.moveSection(tab, section.id, d)), si, sections.length, section.name)));
+
+    const items = activeItems(section);
+    items.forEach((item, ii) => {
+      const row = el('button', { className: 'edit-open item-look', ariaLabel: `Edit ${item.name}` }, miniFigure(item), el('span', { className: 'edit-name' }, item.name), el('span', { className: 'pencil', ariaHidden: 'true' }, '✏️'));
+      row.addEventListener('click', () => itemForm(section, item));
+      block.append(el('div', { className: 'edit-row' }, row, ...moveButtons((d) => edit(layout.moveItem(tab, item.id, d)), ii, items.length, item.name)));
+    });
+    const add = el('button', { className: 'add-btn' }, '+ ADD EXERCISE');
+    add.addEventListener('click', () => itemForm(section, null));
+    block.append(add);
+    editor.append(block);
+  });
+
+  const addSection = el('button', { className: 'chunky-btn add-section' }, '+ ADD SECTION');
+  addSection.addEventListener('click', () => sectionForm(null));
+  editor.append(addSection);
+
+  // Archived things keep their check-ins and can come back.
+  const archived = [
+    ...tab.sections.filter((s) => s.archived).map((s) => ({ kind: 'section', id: s.id, label: `${s.emoji} ${s.name} · ${s.subtitle}`, note: 'section' })),
+    ...tab.sections.filter((s) => !s.archived).flatMap((s) => s.items.filter((it) => it.archived).map((it) => ({ kind: 'item', id: it.id, label: it.name, note: s.name }))),
+  ];
+  if (archived.length) {
+    const list = el('div', { className: 'panel' }, el('h3', { className: 'sheet-heading' }, 'ARCHIVED'));
+    for (const a of archived) {
+      const restoreBtn = el('button', { className: 'chunky-btn small' }, 'RESTORE');
+      restoreBtn.addEventListener('click', () => edit(layout.setArchived(tab, a.kind, a.id, false)));
+      list.append(el('div', { className: 'archived-row' }, el('span', { className: 'edit-name' }, a.label, el('small', {}, a.note)), restoreBtn));
+    }
+    editor.append(list);
+  }
+
+  const exportBtn = el('button', { className: 'chunky-btn small' }, '⬇ EXPORT');
+  const importBtn = el('button', { className: 'chunky-btn small' }, '⬆ IMPORT');
+  exportBtn.addEventListener('click', exportBackup);
+  importBtn.addEventListener('click', () => importInput.click());
+  editor.append(
+    el(
+      'div',
+      { className: 'panel' },
+      el('h3', { className: 'sheet-heading' }, 'BACKUP'),
+      el('p', { className: 'form-msg' }, 'Your check-ins live on this phone only. Export a backup file now and then, and import it to restore.'),
+      el('div', { className: 'form-buttons' }, exportBtn, importBtn),
+    ),
+  );
+  board.replaceChildren(editor);
+}
+
+// ---- Backup ----
+const importInput = el('input', { type: 'file', accept: 'application/json,.json', hidden: true });
+document.body.append(importInput);
+
+function exportBackup() {
+  const blob = new Blob([JSON.stringify(makeBackup(snapshot()), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = el('a', { href: url, download: backupFileName() });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Backup saved to Downloads');
+}
+
+importInput.addEventListener('change', async () => {
+  const file = importInput.files[0];
+  importInput.value = '';
+  if (!file) return;
+  let data;
+  try {
+    data = parseBackup(await file.text());
+  } catch (err) {
+    openForm({ title: 'CAN’T IMPORT', message: err.message, primary: 'OK', onSubmit: () => {} });
+    return;
+  }
+  openForm({
+    title: 'REPLACE EVERYTHING?',
+    message: `This backup has ${describeBackup(data)}. Importing replaces all exercises and check-ins on this phone.`,
+    primary: 'REPLACE',
+    extra: [{ label: 'CANCEL', onClick: () => {} }],
+    onSubmit: () => {
+      restore(data);
+      tab = loadTab('fitness', fitnessTab);
+      render();
+      toast('Backup imported');
+    },
+  });
+});
+
+const toastEl = el('div', { className: 'toast', role: 'status' });
+document.body.append(toastEl);
+let toastTimer;
+function toast(text) {
+  toastEl.textContent = text;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
+
+screen.querySelector('.edit-toggle').addEventListener('click', () => {
+  state.editing = !state.editing;
+  render();
+  window.scrollTo(0, 0);
 });
 
 // ---- Tabs (hash-based so the Android back button works) ----

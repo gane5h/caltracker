@@ -28,3 +28,16 @@ export function milestoneCrossed(before, after, milestones = MILESTONES) {
   const passed = milestones.filter((m) => before < m && m <= after);
   return passed.length ? Math.max(...passed) : null;
 }
+
+/** The longest run of consecutive days in a sorted list of day keys. */
+export function longestStreak(sortedDays) {
+  let best = 0;
+  let run = 0;
+  let prev = null;
+  for (const day of sortedDays) {
+    run = prev !== null && shift(prev, 1) === day ? run + 1 : 1;
+    best = Math.max(best, run);
+    prev = day;
+  }
+  return best;
+}
