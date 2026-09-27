@@ -54,6 +54,7 @@ css/app.css     theme and animations
 js/app.js       rendering and interactions
 js/data.js      sections and exercises
 js/store.js     localStorage persistence
+js/streaks.js   streak math
 js/dates.js     week math
 tests/          unit tests
 fonts/ icons/   bundled assets (fonts under the SIL Open Font License)

@@ -36,5 +36,31 @@ export function toggle(itemId, day) {
   return nowChecked;
 }
 
+// Milestones already celebrated, keyed by chain start + milestone, so undoing
+// and redoing a check-in doesn't replay the trophy card.
+const CELEBRATED_KEY = 'chain/celebrated';
+const celebrated = new Set(
+  (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CELEBRATED_KEY));
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  })(),
+);
+
+/** Returns false if `key` was already celebrated; otherwise records it and returns true. */
+export function claimCelebration(key) {
+  if (celebrated.has(key)) return false;
+  celebrated.add(key);
+  try {
+    localStorage.setItem(CELEBRATED_KEY, JSON.stringify([...celebrated]));
+  } catch (err) {
+    console.error('Could not save celebrations', err);
+  }
+  return true;
+}
+
 // Ask the browser not to evict our data under storage pressure.
 navigator.storage?.persist?.();
