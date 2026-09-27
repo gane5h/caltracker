@@ -1,6 +1,6 @@
 // Offline support: serve from cache, refresh the cache in the background
 // (stale-while-revalidate), so a new version shows up on the next launch.
-const CACHE = 'chain-v1';
+const CACHE = 'chain-v2';
 const SHELL = [
   './',
   'index.html',
@@ -9,6 +9,7 @@ const SHELL = [
   'js/data.js',
   'js/dates.js',
   'js/store.js',
+  'js/streaks.js',
   'manifest.webmanifest',
   'icons/icon.svg',
   'icons/icon-192.png',

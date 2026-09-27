@@ -155,6 +155,7 @@ css/app.css             theme tokens, chunky 3D styles, animations
 js/app.js               rendering, tap handling, week nav, tabs
 js/data.js              sections and exercises
 js/store.js             check-ins in localStorage
+js/streaks.js           streak math (pure, unit-tested)
 js/dates.js             local-time week math
 tests/                  node --test unit tests
 fonts/, icons/          bundled assets
@@ -195,8 +196,10 @@ and optional cloud sync.
 - [x] Milestone 1: skeleton, theme, fonts, game-style tab bar, locked Diet and Money tabs
 - [x] Milestone 2: Fitness grid, tap to toggle with pop, star burst and haptics,
       saved on the device, week navigation, today highlighted, future days locked
-- [ ] Milestone 3: streaks and HUD flame
-- [ ] Milestone 4: celebrations
+- [x] Milestone 3: HUD flame (dims until today has a check-in), item and section
+      streak chips, streak unit tests across timezones and DST
+- [x] Milestone 4: squash-and-stretch check-in, gentler undo, section-clear shine and
+      stamp, 7/30/100-day trophy card (each chain celebrates a milestone once)
 - [ ] Milestone 5: exercise infographics
 - [ ] Milestone 6: in-app editing and export
 - [x] Milestone 7: GitHub Pages + installable PWA with offline support

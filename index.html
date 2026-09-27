@@ -26,9 +26,15 @@
     <section class="screen" id="screen-fitness" data-tab="fitness">
       <header class="hud">
         <h1 class="title-plate"><span class="emoji" aria-hidden="true">💪</span>FITNESS</h1>
-        <div class="counter" role="status">
-          <svg class="star-icon" aria-hidden="true"><use href="#star" /></svg>
-          <span class="week-total">0</span>
+        <div class="hud-stats">
+          <div class="counter flame-counter cold" role="img">
+            <span class="flame" aria-hidden="true">🔥</span>
+            <span class="chain-length">0</span>
+          </div>
+          <div class="counter week-counter" role="img">
+            <svg class="star-icon" aria-hidden="true"><use href="#star" /></svg>
+            <span class="week-total">0</span>
+          </div>
         </div>
       </header>
 
@@ -53,6 +59,18 @@
       <div class="locked-card money"><span class="emoji" aria-hidden="true">💰</span><h1>MONEY</h1><p>Locked · coming soon</p></div>
     </section>
   </main>
+
+  <dialog class="trophy" aria-labelledby="trophy-title">
+    <div class="trophy-rays" aria-hidden="true"></div>
+    <div class="trophy-card">
+      <span class="trophy-icon emoji" aria-hidden="true">🏆</span>
+      <h2 id="trophy-title" class="game-text"><span class="trophy-days"></span>-DAY CHAIN!</h2>
+      <p class="trophy-msg"></p>
+      <button class="chunky-btn trophy-close">AWESOME!</button>
+    </div>
+  </dialog>
+
+  <div class="sr-only" aria-live="polite" id="announcer"></div>
 
   <nav class="tab-bar" role="tablist">
     <button role="tab" data-tab="fitness" class="tab fitness"><span class="emoji" aria-hidden="true">💪</span>FITNESS</button>
