@@ -14,7 +14,7 @@ We build **Fitness first**, with the structure ready for the other tabs.
 |---|---|---|
 | App framework | **Expo (React Native) + TypeScript** | One codebase for iOS and Android; runs on your phone through Expo Go in minutes, and EAS builds a real installable app later |
 | Navigation | **expo-router** with a bottom tab bar | File-based tabs; adding "Diet" later is one new file |
-| Local storage | **react-native-mmkv** (or AsyncStorage) behind a small repository layer | Fast, works offline, no backend needed for a personal app. Can sync to the cloud later without touching the UI |
+| Local storage | **AsyncStorage** (runs in Expo Go; can move to MMKV once we need a dev build) | Fast, works offline, no backend needed for a personal app. Can sync to the cloud later without touching the UI |
 | State | **Zustand** | Small, simple, and saves its state to storage |
 | Animations | **react-native-reanimated** + **moti** | 60fps springs and bounces for tap feedback and streak effects |
 | Exercise infographics | **react-native-svg** animated with Reanimated (Lottie as a fallback) | Custom looping figure animations in the app's style, small file size |
@@ -189,12 +189,21 @@ and optional cloud sync.
 
 ---
 
-## 8. Open questions
+## 8. Decisions
 
-1. **Push/pull split:** is the grouping in §4 right?
-2. **Chain definition:** should a day count if you do *anything* on the tab, or
-   do you follow a split (e.g. Mon/Thu push, Tue/Fri pull, Wed/Sat legs), where
-   only the scheduled items count?
-3. **Phone:** iPhone, Android, or both? This decides the first build target.
-4. **Sets and reps:** check-in only, or also log weight and reps on a long-press?
-   Check-in only fits the "simple tap" idea best.
+1. **Push/pull split:** confirmed as in §4.
+2. **Chain definition:** *any* check-in on a tab keeps that day's chain alive.
+   Items have no schedules.
+3. **Platform:** Android first. Use Expo Go now, then an EAS APK build.
+4. **Logging:** tap only. No weights or reps.
+
+## 9. Status
+
+- [x] Milestone 1: skeleton, theme, fonts, game-style tab bar, locked Diet and Money tabs
+- [x] Milestone 2: Fitness grid, tap to toggle with pop, star burst and haptics,
+      saved on the device, week navigation, today highlighted, future days locked
+- [ ] Milestone 3: streaks and HUD flame
+- [ ] Milestone 4: celebrations
+- [ ] Milestone 5: exercise infographics
+- [ ] Milestone 6: in-app editing and export
+- [ ] Milestone 7: EAS Android build
