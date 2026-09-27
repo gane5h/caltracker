@@ -78,6 +78,8 @@ Original art in a similar *style*; no copied game assets or branding.
 │ ▼ LOWER BODY                  0/2    │
 │  Deadlift           □  □  ■  □  □ …  │
 │  Squat              □  □  ■  □  □ …  │
+│ ▼ CARDIO · TREADMILL 30 MIN   0/1    │
+│  Brisk walk         □  ■  □  ■  □ …  │
 ├──────────────────────────────────────┤
 │  [🏋 Fitness] [🥗 Diet] [💰 Money] [+] │  ← bottom tabs
 └──────────────────────────────────────┘
@@ -117,6 +119,9 @@ The upper-body split into push and pull is confirmed.
 **Lower Body**
 1. Deadlift
 2. Squat
+
+**Cardio — Treadmill**
+1. Brisk walk, 30 min
 
 Every exercise gets an original SVG figure animation with 2–4 keyframe poses,
 animated with CSS. The figures are built from simple parts (limbs,
@@ -170,7 +175,7 @@ fonts/, icons/          bundled assets
 3. **Streaks:** HUD, item and section streaks, unit tests for the streak math
    (including timezone and daylight-saving edge cases).
 4. **Juice:** check-in animation, haptics, section-clear stamp, milestone trophy card.
-5. **Infographics:** figure rig, 10 exercise animations, muscle map, exercise card.
+5. **Infographics:** figure rig, 11 exercise animations, muscle map, exercise card.
 6. **Editing:** add, rename, reorder, and archive sections and items in the app,
    so you can fill in the rest yourself. Plus JSON export/import.
 7. **Ship to your phone:** GitHub Pages plus *Add to Home screen* (done early, since it's free).

@@ -36,5 +36,12 @@ export const fitnessTab = {
         { id: 'squat', name: 'Squat' },
       ],
     },
+    {
+      id: 'cardio',
+      name: 'Cardio',
+      subtitle: 'Treadmill · 30 min',
+      emoji: '🏃',
+      items: [{ id: 'treadmill-walk', name: 'Brisk walk' }],
+    },
   ],
 };
