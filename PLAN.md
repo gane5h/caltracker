@@ -10,18 +10,24 @@ We build **Fitness first**, with the structure ready for the other tabs.
 
 ## 1. Tech stack
 
+**Zero dependencies, no build step.** The app is plain HTML, CSS and JavaScript
+(ES modules). GitHub Pages serves it straight from the repo.
+
 | Concern | Choice | Why |
 |---|---|---|
-| App framework | **Expo (React Native) + TypeScript** | One codebase for iOS and Android; runs on your phone through Expo Go in minutes, and EAS builds a real installable app later |
-| Navigation | **expo-router** with a bottom tab bar | File-based tabs; adding "Diet" later is one new file |
-| Local storage | **AsyncStorage** (runs in Expo Go; can move to MMKV once we need a dev build) | Fast, works offline, no backend needed for a personal app. Can sync to the cloud later without touching the UI |
-| State | **Zustand** | Small, simple, and saves its state to storage |
-| Animations | **react-native-reanimated** + **moti** | 60fps springs and bounces for tap feedback and streak effects |
-| Exercise infographics | **react-native-svg** animated with Reanimated (Lottie as a fallback) | Custom looping figure animations in the app's style, small file size |
-| Haptics / sound | **expo-haptics**, **expo-av** | The satisfying "thunk" when you check in |
-| Fonts | **Lilita One** (headings) + **Nunito Black/ExtraBold** (body) via expo-font | Heavy, rounded, game-UI lettering |
+| App | Vanilla HTML/CSS/JS | Nothing to install, compile or keep updated; edit a file and push |
+| Hosting | **GitHub Pages** from this repo | Free HTTPS, deploys on every push |
+| "Install" on Android | **PWA**: web app manifest + service worker | Chrome's *Add to Home screen* gives a full-screen app with an icon, and it works offline |
+| Storage | `localStorage` (+ `navigator.storage.persist()`) | Data stays on the phone. No server, no account |
+| Navigation | URL hash tabs (`#fitness`, `#diet`, `#money`) | The Android back button works |
+| Animations | CSS keyframes and transitions | Pop, star burst, bouncy tabs; honours "reduce motion" |
+| Exercise infographics | Inline SVG animated with CSS | Custom looping figures in the app's style |
+| Haptics | `navigator.vibrate()` | Supported by Chrome on Android |
+| Fonts | **Lilita One** + **Nunito**, bundled in `fonts/` (OFL licence) | No calls to font CDNs |
+| Tests | Node's built-in `node --test` | No test framework to install |
 
-No accounts, no server. Data stays on the device, with a JSON export/import for backup.
+Trade-off: data lives in one browser on one phone. Clearing Chrome's site data
+erases it, so JSON export/import (milestone 6) is the backup.
 
 ---
 
@@ -94,7 +100,7 @@ Original art in a similar *style*; no copied game assets or branding.
 
 ## 4. Fitness content (v1)
 
-The upper-body list below is my proposed split into push and pull. Please confirm it.
+The upper-body split into push and pull is confirmed.
 
 **Upper Body — Shoulders / Push**
 1. Shoulder press
@@ -113,7 +119,7 @@ The upper-body list below is my proposed split into push and pull. Please confir
 2. Squat
 
 Every exercise gets an original SVG figure animation with 2–4 keyframe poses,
-blended with Reanimated. The figures are built from simple parts (limbs,
+animated with CSS. The figures are built from simple parts (limbs,
 torso, a dumbbell), so new exercises are cheap to add.
 
 ---
@@ -122,21 +128,17 @@ torso, a dumbbell), so new exercises are cheap to add.
 
 The same model works for every tab, so Diet and Finances need no new code.
 
-```ts
-type Tab      = { id: string; name: string; icon: string; accent: string; sections: Section[] };
-type Section  = { id: string; tabId: string; name: string; order: number; items: Item[] };
-type Item     = { id: string; sectionId: string; name: string; order: number;
-                  animationKey?: string;  // e.g. 'shoulder_press'
-                  schedule?: Weekday[];   // optional: which days it's expected
-                  archived?: boolean };
-type CheckIn  = { itemId: string; date: 'YYYY-MM-DD' };   // stored as a Set per item
+```js
+tab      = { id, sections: [section] }
+section  = { id, name, subtitle, emoji, items: [item] }
+item     = { id, name }
+checkIns = { [itemId]: { 'YYYY-MM-DD': true } }   // localStorage 'chain/check-ins'
 ```
 
-### Chain rules (proposed)
+### Chain rules
 - **Tab chain (the big flame):** a day counts if at least one check-in on that
   tab was made that day.
-- **Item streak:** consecutive *scheduled* days on which that item was checked.
-  If an item has no schedule, every day counts.
+- **Item streak:** consecutive days on which that item was checked.
 - **Section clear:** every item in the section is checked for that day.
 - Streaks are computed from check-ins, never stored, so editing a past day
   updates them correctly.
@@ -146,33 +148,23 @@ type CheckIn  = { itemId: string; date: 'YYYY-MM-DD' };   // stored as a Set per
 ## 6. Project structure
 
 ```
-app/
-  _layout.tsx            # fonts, theme, tab bar
-  (tabs)/fitness.tsx
-  (tabs)/diet.tsx        # placeholder "coming soon" at first
-  (tabs)/finances.tsx
-src/
-  theme/                 # colors, typography, shadows, the chunky components
-  components/
-    ChainGrid.tsx        # sections + rows + 7-day columns
-    CheckCell.tsx        # the animated tap target
-    SectionRibbon.tsx
-    StreakHud.tsx
-    ExerciseSheet.tsx
-    Celebration.tsx      # confetti / milestone overlays
-  figures/               # SVG figure rig + one pose file per exercise
-  data/
-    seed.ts              # the Fitness sections and items above
-    store.ts             # Zustand + MMKV
-    streaks.ts           # pure functions for streak math (unit-tested)
-  utils/dates.ts         # week math, local-timezone day keys
+index.html              app shell: screens, tab bar, shared SVG star symbol
+manifest.webmanifest    PWA metadata (name, icons, colours)
+sw.js                   service worker: offline cache, updates in the background
+css/app.css             theme tokens, chunky 3D styles, animations
+js/app.js               rendering, tap handling, week nav, tabs
+js/data.js              sections and exercises
+js/store.js             check-ins in localStorage
+js/dates.js             local-time week math
+tests/                  node --test unit tests
+fonts/, icons/          bundled assets
 ```
 
 ---
 
 ## 7. Milestones
 
-1. **Skeleton:** Expo app, tabs, theme tokens, fonts, placeholder tabs for Diet and Finances.
+1. **Skeleton:** app shell, tabs, theme tokens, fonts, placeholder tabs for Diet and Finances.
 2. **Grid + persistence:** the Fitness grid from seed data, tap to toggle, saved
    on the device, week navigation, today highlighted.
 3. **Streaks:** HUD, item and section streaks, unit tests for the streak math
@@ -181,7 +173,7 @@ src/
 5. **Infographics:** figure rig, 10 exercise animations, muscle map, exercise card.
 6. **Editing:** add, rename, reorder, and archive sections and items in the app,
    so you can fill in the rest yourself. Plus JSON export/import.
-7. **Ship to your phone:** Expo Go first, then an EAS build (TestFlight or APK).
+7. **Ship to your phone:** GitHub Pages plus *Add to Home screen* (done early, since it's free).
    Optional: a daily reminder notification ("Don't break the chain! 🔥").
 
 Later: the Diet and Finances tabs (same grid engine), a home-screen widget,
@@ -194,7 +186,8 @@ and optional cloud sync.
 1. **Push/pull split:** confirmed as in §4.
 2. **Chain definition:** *any* check-in on a tab keeps that day's chain alive.
    Items have no schedules.
-3. **Platform:** Android first. Use Expo Go now, then an EAS APK build.
+3. **Platform:** Android first, as a PWA served from GitHub Pages.
+5. **No external dependencies:** replaced the Expo/React Native build with vanilla web.
 4. **Logging:** tap only. No weights or reps.
 
 ## 9. Status
@@ -206,4 +199,4 @@ and optional cloud sync.
 - [ ] Milestone 4: celebrations
 - [ ] Milestone 5: exercise infographics
 - [ ] Milestone 6: in-app editing and export
-- [ ] Milestone 7: EAS Android build
+- [x] Milestone 7: GitHub Pages + installable PWA with offline support

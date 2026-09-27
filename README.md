@@ -1,41 +1,60 @@
 # Chain
 
 A personal "don't break the chain" tracker. Each tab is a weekly grid: tap a
-cell to check in for that day. See [PLAN.md](PLAN.md) for the full roadmap.
+cell to check in for that day. See [PLAN.md](PLAN.md) for the roadmap.
 
-Built with Expo SDK 57 (React Native + TypeScript). Android is the first target.
+It's plain HTML, CSS and JavaScript. There are **no dependencies and no build
+step**, and it runs straight from this repo on GitHub Pages.
 
-## Run it on your Android phone
+## Put it on your Android phone
 
-1. Install **Expo Go** from the Play Store.
-2. On your computer:
-   ```bash
-   npm install
-   npm start          # or: npx expo start --tunnel   if phone and computer aren't on the same Wi-Fi
-   ```
-3. Scan the QR code in the terminal with Expo Go.
+1. **Turn on GitHub Pages** (one time): in the repo, go to **Settings → Pages**.
+   Under *Build and deployment*, choose **Deploy from a branch**, then pick the
+   branch and the **`/ (root)`** folder, and save.
+   After about a minute the app is live at `https://<your-username>.github.io/caltracker/`.
+2. Open that URL in **Chrome** on your phone.
+3. Open the **⋮ menu** and tap **Add to Home screen** (or **Install app**).
 
-Check-ins are stored on the device only (AsyncStorage).
+It then opens full-screen from its own icon and works offline. When you push
+changes, the app picks them up the next time you open it.
 
-## Scripts
+> GitHub Pages is free for public repos. A private repo needs a paid GitHub plan
+> to use Pages.
 
-| Command | What it does |
-|---|---|
-| `npm start` | Start the dev server |
-| `npm run web` | Run in the browser |
-| `npm test` | Unit tests (Node's built-in test runner) |
-| `npm run typecheck` | TypeScript |
-| `npm run lint` | ESLint |
+Check-ins are saved on the phone only (`localStorage`). Clearing Chrome's data
+for the site erases them.
+
+## Run it locally
+
+Any static file server works. For example:
+
+```bash
+python3 -m http.server 8000     # then open http://localhost:8000
+```
+
+Opening `index.html` directly as a `file://` URL won't work, because browsers
+block ES modules and service workers there.
+
+## Tests
+
+```bash
+node --test
+```
+
+## Changing exercises
+
+Edit `js/data.js`. Keep existing item `id`s, because check-ins are stored
+against them.
 
 ## Layout
 
 ```
-src/app/            routes: index (Fitness), diet, finances, and the tab layout
-src/components/     grid, animated check cell, section ribbons, game tab bar
-src/data/           tab/section/item seed data and the persisted check-in store
-src/theme/          colors, fonts, "chunky" 3D styles
-src/utils/dates.ts  local-time week math (tested)
+index.html  manifest.webmanifest  sw.js
+css/app.css     theme and animations
+js/app.js       rendering and interactions
+js/data.js      sections and exercises
+js/store.js     localStorage persistence
+js/dates.js     week math
+tests/          unit tests
+fonts/ icons/   bundled assets (fonts under the SIL Open Font License)
 ```
-
-To change exercises, edit `src/data/seed.ts`. Keep existing item `id`s, because
-check-ins are stored against them.
