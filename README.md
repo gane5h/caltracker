@@ -43,8 +43,21 @@ node --test
 
 ## Changing exercises
 
-Edit `js/data.js`. Keep existing item `id`s, because check-ins are stored
-against them.
+Tap **✏️ Edit exercises** under the grid. You can add, rename, reorder and
+archive sections and exercises, and give each exercise an animation. Archived
+items keep their check-ins and can be restored.
+
+Tap an exercise's name to see its animation, the muscles it works, form tips,
+and your streaks.
+
+`js/data.js` is only the starting layout for a fresh install. To add a new
+animation, add an entry to `js/exercises.js` (see the pose notes at the top).
+
+## Backups
+
+Your data lives on the phone only. In edit mode, **Export** saves a
+`chain-backup-YYYY-MM-DD.json` file to Downloads, and **Import** restores one
+(it replaces everything on the phone).
 
 ## Layout
 
@@ -52,7 +65,11 @@ against them.
 index.html  manifest.webmanifest  sw.js
 css/app.css     theme and animations
 js/app.js       rendering and interactions
-js/data.js      sections and exercises
+js/data.js      starting sections and exercises
+js/exercises.js exercise library: poses, muscles, tips
+js/figures.js   animated figures and muscle map
+js/layout.js    edits (add, move, archive)
+js/backup.js    export/import format
 js/store.js     localStorage persistence
 js/streaks.js   streak math
 js/dates.js     week math

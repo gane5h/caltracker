@@ -49,6 +49,7 @@
       </nav>
 
       <div class="board"></div>
+      <button class="chunky-btn edit-toggle">✏️ EDIT EXERCISES</button>
     </section>
 
     <section class="screen locked" id="screen-diet" data-tab="diet" hidden>
@@ -67,6 +68,20 @@
       <h2 id="trophy-title" class="game-text"><span class="trophy-days"></span>-DAY CHAIN!</h2>
       <p class="trophy-msg"></p>
       <button class="chunky-btn trophy-close">AWESOME!</button>
+    </div>
+  </dialog>
+
+  <dialog class="sheet" id="exercise-sheet" aria-labelledby="exercise-title">
+    <div class="sheet-card">
+      <button class="sheet-close" aria-label="Close">✕</button>
+      <div class="sheet-body"></div>
+    </div>
+  </dialog>
+
+  <dialog class="sheet" id="form-sheet" aria-labelledby="form-title">
+    <div class="sheet-card">
+      <button class="sheet-close" aria-label="Close">✕</button>
+      <div class="sheet-body"></div>
     </div>
   </dialog>
 
