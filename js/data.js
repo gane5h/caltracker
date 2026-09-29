@@ -47,3 +47,23 @@ export const fitnessTab = {
     },
   ],
 };
+
+export const dietTab = {
+  id: 'diet',
+  sections: [
+    {
+      id: 'water',
+      name: 'Water',
+      subtitle: 'Hydration',
+      emoji: '💧',
+      items: [{ id: 'drink-water', name: 'Drink water' }],
+    },
+    {
+      id: 'meds',
+      name: 'Meds',
+      subtitle: 'Daily',
+      emoji: '💊',
+      items: [{ id: 'take-meds', name: 'Take meds' }],
+    },
+  ],
+};

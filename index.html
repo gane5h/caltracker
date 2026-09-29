@@ -52,8 +52,33 @@
       <button class="chunky-btn edit-toggle">✏️ EDIT EXERCISES</button>
     </section>
 
-    <section class="screen locked" id="screen-diet" data-tab="diet" hidden>
-      <div class="locked-card diet"><span class="emoji" aria-hidden="true">🥗</span><h1>DIET</h1><p>Locked · coming soon</p></div>
+    <section class="screen" hidden id="screen-diet" data-tab="diet">
+      <header class="hud">
+        <h1 class="title-plate"><span class="emoji" aria-hidden="true">🥗</span>DIET</h1>
+        <div class="hud-stats">
+          <div class="counter flame-counter cold" role="img">
+            <span class="flame" aria-hidden="true">🔥</span>
+            <span class="chain-length">0</span>
+          </div>
+          <div class="counter week-counter" role="img">
+            <svg class="star-icon" aria-hidden="true"><use href="#star" /></svg>
+            <span class="week-total">0</span>
+          </div>
+        </div>
+      </header>
+
+      <nav class="week-nav">
+        <button class="chunky-btn prev-week" aria-label="Previous week">◀</button>
+        <div class="week-label">
+          <span class="caption">THIS WEEK</span>
+          <span class="range"></span>
+          <button class="to-today" hidden>Back to today</button>
+        </div>
+        <button class="chunky-btn next-week" aria-label="Next week">▶</button>
+      </nav>
+
+      <div class="board"></div>
+      <button class="chunky-btn edit-toggle">✏️ EDIT HABITS</button>
     </section>
 
     <section class="screen locked" id="screen-money" data-tab="money" hidden>

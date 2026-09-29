@@ -18,6 +18,7 @@
   --cyan: #2FD8FF;
   --accent: var(--yellow);
   --accent-deep: var(--yellow-deep);
+  --accent-light: #FFF6A8;
   --display: 'Lilita One', 'Arial Rounded MT Bold', system-ui, sans-serif;
   --body: 'Nunito', system-ui, sans-serif;
   --tabbar-h: 84px;
@@ -69,6 +70,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   display: flex; flex-direction: column; gap: 14px;
 }
 .screen[hidden] { display: none; }
+/* Each tab's accent; the item sheet borrows it via data-tab too. */
+.screen[data-tab="diet"], .sheet[data-tab="diet"] { --accent: var(--lime); --accent-deep: #34B516; --accent-light: #DDFFC4; }
 
 /* HUD */
 .hud { display: flex; align-items: center; justify-content: space-between; }
@@ -209,7 +212,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cell:disabled { opacity: .35; cursor: default; }
 .cell.today:not([aria-checked="true"]) { border-color: var(--accent); border-top-color: var(--accent-deep); }
 .cell[aria-checked="true"] {
-  background: linear-gradient(#FFF6A8, var(--accent) 45%, var(--accent-deep));
+  background: linear-gradient(var(--accent-light), var(--accent) 45%, var(--accent-deep));
   border: 2.5px solid var(--ink); border-bottom-width: 4.5px;
   overflow: visible;
 }

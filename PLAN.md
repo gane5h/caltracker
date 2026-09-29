@@ -123,6 +123,13 @@ The upper-body split into push and pull is confirmed.
 **Cardio — Treadmill**
 1. Brisk walk, 30 min
 
+**Diet** (same grid engine, lime accent)
+- Water — Hydration: Drink water
+- Meds — Daily: Take meds
+
+Diet rows are "habits": no figures or muscle map. The row icon and the card show
+the section's emoji, and the card keeps the streaks and the 12-week heatmap.
+
 Every exercise gets an original SVG figure animation with 2–4 keyframe poses,
 animated with CSS. The figures are built from simple parts (limbs,
 torso, a dumbbell), so new exercises are cheap to add.
@@ -187,7 +194,7 @@ fonts/, icons/          bundled assets
 7. **Ship to your phone:** GitHub Pages plus *Add to Home screen* (done early, since it's free).
    Optional: a daily reminder notification ("Don't break the chain! 🔥").
 
-Later: the Diet and Finances tabs (same grid engine), a home-screen widget,
+Later: the Finances tab (same grid engine), a home-screen widget,
 and optional cloud sync.
 
 ---
@@ -220,3 +227,5 @@ and optional cloud sync.
       only offers Periodic Background Sync, which fires when Chrome decides (often
       hours late), so it can't promise "remind me at 8pm"
 - [x] Milestone 7: GitHub Pages + installable PWA with offline support
+- [x] Diet tab: Water and Meds sections on the shared board engine, with its own
+      chain, streaks, trophies and edit mode. Item ids stay unique across tabs

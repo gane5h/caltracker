@@ -61,9 +61,10 @@ export function addSection(tab, { name, subtitle = '', emoji = '⭐' }) {
   return next;
 }
 
-export function addItem(tab, sectionId, { name, exercise }) {
+/** `reserved` lists item ids used on other tabs; check-ins are keyed by item id app-wide. */
+export function addItem(tab, sectionId, { name, exercise }, reserved = []) {
   const next = clone(tab);
-  const item = { id: newId(name, takenIds(tab)), name };
+  const item = { id: newId(name, new Set([...takenIds(tab), ...reserved])), name };
   if (exercise) item.exercise = exercise;
   next.sections.find((s) => s.id === sectionId).items.push(item);
   return next;

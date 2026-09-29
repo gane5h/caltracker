@@ -29,5 +29,5 @@ test('bad files are rejected with a readable reason', () => {
 });
 
 test('describeBackup counts items and check-ins', () => {
-  assert.equal(describeBackup(data), '10 exercises and 1 check-in');
+  assert.equal(describeBackup(data), '11 items and 1 check-in');
 });
