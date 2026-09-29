@@ -14,11 +14,15 @@
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
-  <!-- Shared star shape, reused via <use href="#star"> -->
+  <!-- Shared shapes, reused via <use href="#star"> and <use href="#drop"> -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="star" viewBox="0 0 100 100">
       <polygon points="50,4 62,37 97,38 69,59 79,94 50,74 21,94 31,59 3,38 38,37"
                stroke="#12082B" stroke-width="8" stroke-linejoin="round" />
+    </symbol>
+    <symbol id="drop" viewBox="0 0 100 100">
+      <path d="M50,6 C62,30 82,46 82,66 A32,32 0 0 1 18,66 C18,46 38,30 50,6 Z"
+            stroke="#12082B" stroke-width="8" stroke-linejoin="round" />
     </symbol>
   </svg>
 

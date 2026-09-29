@@ -62,10 +62,11 @@ export function addSection(tab, { name, subtitle = '', emoji = '⭐' }) {
 }
 
 /** `reserved` lists item ids used on other tabs; check-ins are keyed by item id app-wide. */
-export function addItem(tab, sectionId, { name, exercise }, reserved = []) {
+export function addItem(tab, sectionId, { name, exercise, icon }, reserved = []) {
   const next = clone(tab);
   const item = { id: newId(name, new Set([...takenIds(tab), ...reserved])), name };
   if (exercise) item.exercise = exercise;
+  if (icon) item.icon = icon;
   next.sections.find((s) => s.id === sectionId).items.push(item);
   return next;
 }
@@ -79,14 +80,17 @@ export function updateSection(tab, sectionId, changes) {
   return next;
 }
 
-/** Renames or re-animates an item; `sectionId` moves it to the end of another section. */
-export function updateItem(tab, itemId, { sectionId, exercise, ...changes }) {
+/**
+ * Renames an item or changes its animation (`exercise`) or `icon`; an empty one
+ * removes it. `sectionId` moves the item to the end of another section.
+ */
+export function updateItem(tab, itemId, { sectionId, exercise, icon, ...changes }) {
   const next = clone(tab);
   const { section, item } = findItem(next, itemId);
   Object.assign(item, changes);
-  if (exercise !== undefined) {
-    if (exercise) item.exercise = exercise;
-    else delete item.exercise;
+  for (const [key, value] of Object.entries({ exercise, icon })) {
+    if (value) item[key] = value;
+    else if (value !== undefined) delete item[key];
   }
   if (sectionId && sectionId !== section.id) {
     section.items.splice(section.items.indexOf(item), 1);

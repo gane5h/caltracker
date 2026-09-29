@@ -1,6 +1,7 @@
 // The starting layout. After the first launch the layout is saved on the phone
 // and edited in the app. Item ids are stored with check-ins, so never change one.
-// `exercise` picks the animation, muscle map and tips from exercises.js.
+// `exercise` picks the animation, muscle map and tips from exercises.js;
+// `icon` picks a habit's looping icon and check-in effect from icons.js.
 export const fitnessTab = {
   id: 'fitness',
   sections: [
@@ -56,14 +57,14 @@ export const dietTab = {
       name: 'Water',
       subtitle: 'Hydration',
       emoji: '💧',
-      items: [{ id: 'drink-water', name: 'Drink water' }],
+      items: [{ id: 'drink-water', name: 'Drink water', icon: 'water' }],
     },
     {
       id: 'meds',
       name: 'Meds',
       subtitle: 'Daily',
       emoji: '💊',
-      items: [{ id: 'take-meds', name: 'Take meds' }],
+      items: [{ id: 'take-meds', name: 'Take meds', icon: 'pill' }],
     },
   ],
 };

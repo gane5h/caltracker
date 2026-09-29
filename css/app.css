@@ -183,6 +183,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .item-text { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; overflow-wrap: anywhere; }
 .mini-fig { flex: none; width: 30px; height: 30px; border-radius: 9px; background: var(--slot); display: grid; place-items: center; }
 .mini-fig svg { width: 100%; height: 100%; display: block; }
+.mini-fig .ic { padding: 2px; }
+.hero-fig .ic { width: 180px; height: 180px; max-height: 80%; }
 .mini-fig.empty { font-size: 14px; }
 @media (max-width: 374px) { .mini-fig { width: 24px; height: 24px; } .item-name { font-size: 13px; } }
 
@@ -258,6 +260,80 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes burst {
   from { transform: translate(0, 0) scale(1) rotate(0); opacity: 1; }
   to { transform: translate(var(--dx), var(--dy)) scale(.5) rotate(180deg); opacity: 0; }
+}
+
+/* Habit icons (js/icons.js): loop like the exercise figures */
+.ic { overflow: visible; }
+.ic * { transform-box: view-box; }
+.ic-level { animation: ic-fill 3.2s cubic-bezier(.4,0,.3,1) infinite; }
+.ic-wave { animation: ic-wave 1s linear infinite; }
+.ic-drop { opacity: 0; animation: ic-splash 3.2s ease-out infinite; }
+.ic-drop-2 { animation-delay: .08s; --dx: 8px; }
+.ic-drop-1 { --dx: -8px; }
+.ic-pill { transform-origin: 50% 80%; animation: ic-bounce 1.6s cubic-bezier(.4,0,.4,1) infinite; }
+.ic-shadow { transform-origin: 50px 86px; animation: ic-shadow 1.6s cubic-bezier(.4,0,.4,1) infinite; }
+@keyframes ic-fill {
+  0% { transform: translateY(52px); }
+  50%, 72% { transform: translateY(-6px); }
+  86% { transform: translateY(18px); }
+  100% { transform: translateY(52px); }
+}
+@keyframes ic-wave { to { transform: translateX(25px); } }
+@keyframes ic-splash {
+  0%, 48% { opacity: 0; transform: translate(0, 10px); }
+  52% { opacity: 1; transform: translate(0, 0); }
+  66% { opacity: 1; transform: translate(var(--dx), -16px); }
+  76%, 100% { opacity: 0; transform: translate(calc(var(--dx) * 1.6), 4px); }
+}
+@keyframes ic-bounce {
+  0%, 100% { transform: translateY(0) rotate(-10deg) scale(1.12, .86); }
+  15% { transform: translateY(-4px) rotate(-6deg) scale(.94, 1.08); }
+  50% { transform: translateY(-16px) rotate(12deg) scale(1); }
+  85% { transform: translateY(-2px) rotate(-4deg) scale(.96, 1.05); }
+}
+@keyframes ic-shadow { 0%, 100% { transform: scale(1.1); opacity: .45; } 50% { transform: scale(.6); opacity: .2; } }
+
+/* Water cells: the slot fills with water; undo drains it */
+.cell-water .tank { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.cell-water .liquid {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 0; overflow: hidden;
+  background: linear-gradient(#8AF0FF, #2FD8FF 35%, #1597C9);
+  transition: height .55s cubic-bezier(.3,1.25,.5,1);
+}
+.cell-water .liquid::before { /* wavy surface */
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 5px;
+  background: radial-gradient(circle at 50% 0, #D6FBFF 62%, transparent 66%) 0 0 / 9px 5px repeat-x;
+}
+.cell-water[aria-checked="true"] { background: var(--slot); }
+.cell-water[aria-checked="true"] .liquid { height: 100%; }
+.cell-water.pop .liquid { animation: slosh .55s ease-out; }
+.cell-water.pop .liquid::before { animation: ripple .55s linear; }
+.cell-water[aria-checked="true"]::before, .cell-water .star-mark { z-index: 1; }
+@keyframes slosh { 0% { height: 0; } 60% { height: 88%; } 80% { height: 104%; } 100% { height: 100%; } }
+@keyframes ripple { to { background-position: 27px 0; } }
+
+/* Pill cells: a pill-box compartment. Checking flips the lid open and the pill hops out */
+.cell-pill .lid {
+  position: absolute; inset: -2px -2px auto; height: calc(100% + 4px); z-index: 2; pointer-events: none;
+  border-radius: inherit; border: 2px solid var(--slot-edge);
+  background: linear-gradient(#3B2A7D, var(--slot-rim));
+  transform-origin: 50% 0;
+  transition: transform .4s cubic-bezier(.3,1.6,.5,1);
+}
+.cell-pill .lid::after { /* the tab you pull */
+  content: ''; position: absolute; left: 35%; right: 35%; bottom: 10%; height: 12%;
+  border-radius: 99px; background: var(--muted); opacity: .6;
+}
+.cell-pill.today .lid { border-color: var(--accent); }
+.cell-pill[aria-checked="true"] .lid { transform: translateY(-16%) scaleY(.16); background: var(--pink); border-color: var(--ink); }
+.cell-pill[aria-checked="true"] .lid::after { opacity: 0; }
+.cell-pill .capsule { position: absolute; left: 20%; top: 20%; width: 60%; height: 60%; z-index: 3; opacity: 0; pointer-events: none; }
+.cell-pill .capsule svg { width: 100%; height: 100%; display: block; }
+.cell-pill.pop .capsule { animation: hop-out .6s cubic-bezier(.2,.8,.4,1); }
+@keyframes hop-out {
+  0% { opacity: 1; transform: translateY(10%) rotate(0) scale(.7); }
+  45% { opacity: 1; transform: translateY(-120%) rotate(160deg) scale(1); }
+  100% { opacity: 0; transform: translate(60%, -40%) rotate(320deg) scale(.6); }
 }
 
 /* Milestone trophy card */

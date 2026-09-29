@@ -3,6 +3,7 @@ import { dietTab, fitnessTab } from './data.js';
 import { addDays, formatWeekRange, fromDayKey, startOfWeek, toDayKey, weekDays, WEEKDAY_LETTERS } from './dates.js';
 import { EXERCISES, MUSCLE_NAMES } from './exercises.js';
 import { figureCss, figureSvg, muscleMapSvg } from './figures.js';
+import { iconForName, ICONS, iconSvg } from './icons.js';
 import * as layout from './layout.js';
 import { activeItems, activeSections, everyItem } from './layout.js';
 import { checkedDays, claimCelebration, isChecked, loadTab, restore, saveTab, snapshot, toggle } from './store.js';
@@ -14,15 +15,17 @@ const el = (tag, props = {}, ...children) => {
   return node;
 };
 
-const starSvg = (className) => {
+/** An <svg> showing one of the shared symbols in index.html (#star, #drop). */
+const symbolSvg = (id, className) => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', className);
   svg.setAttribute('aria-hidden', 'true');
   const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-  use.setAttribute('href', '#star');
+  use.setAttribute('href', `#${id}`);
   svg.append(use);
   return svg;
 };
+const starSvg = (className) => symbolSvg('star', className);
 
 /** An element built from an HTML string we generated ourselves (figures, muscle maps). */
 const html = (tag, className, markup) => {
@@ -57,7 +60,8 @@ function makeStreakChip(className) {
   return chip;
 }
 
-function burst(cell) {
+/** Stars fly out of a checked cell; water cells splash droplets instead. */
+function burst(cell, shape = 'star') {
   if (reduceMotion.matches) return;
   const count = 6;
   for (let i = 0; i < count; i++) {
@@ -65,9 +69,9 @@ function burst(cell) {
     const p = el('span', { className: 'particle' });
     p.style.setProperty('--dx', `${Math.cos(angle) * 250}%`);
     p.style.setProperty('--dy', `${Math.sin(angle) * 250}%`);
-    const star = starSvg('');
-    star.style.fill = i % 2 ? '#fff' : 'var(--accent)';
-    p.append(star);
+    const mark = symbolSvg(shape, '');
+    mark.style.fill = i % 2 ? '#fff' : shape === 'drop' ? 'var(--cyan)' : 'var(--accent)';
+    p.append(mark);
     p.addEventListener('animationend', () => p.remove());
     cell.append(p);
   }
@@ -171,6 +175,7 @@ function openForm({ title, message, fields = [], primary, onSubmit, extra = [] }
 }
 
 const animationOptions = () => [['', 'None'], ...Object.entries(EXERCISES).map(([id, ex]) => [id, ex.name])];
+const iconOptions = () => [['', 'None'], ...Object.entries(ICONS).map(([id, icon]) => [id, icon.name])];
 
 function moveButtons(onMove, index, count, label) {
   const up = el('button', { className: 'mini-btn', ariaLabel: `Move ${label} up`, disabled: index === 0 }, '▲');
@@ -312,7 +317,11 @@ function createBoard({ id, seed, animated, words }) {
   }
 
   function makeCell(item, day, onToggle) {
-    const cell = el('button', { className: 'cell' + (day === state.todayKey ? ' today' : '') }, starSvg('star-mark'));
+    const effect = !animated && ICONS[item.icon]?.cell;
+    const cell = el('button', { className: 'cell' + (day === state.todayKey ? ' today' : '') + (effect ? ` cell-${effect}` : '') });
+    if (effect === 'water') cell.append(el('span', { className: 'tank' }, el('span', { className: 'liquid' })));
+    if (effect === 'pill') cell.append(el('span', { className: 'lid' }), html('span', 'capsule', iconSvg('pill')));
+    cell.append(starSvg('star-mark'));
     cell.setAttribute('role', 'checkbox');
     cell.setAttribute('aria-checked', String(isChecked(item.id, day)));
     cell.setAttribute('aria-label', `${item.name} on ${day}`);
@@ -324,7 +333,7 @@ function createBoard({ id, seed, animated, words }) {
       cell.setAttribute('aria-checked', String(nowChecked));
       cell.classList.remove('pop', 'unpop');
       replay(cell, nowChecked ? 'pop' : 'unpop');
-      if (nowChecked) burst(cell);
+      if (nowChecked) burst(cell, effect === 'water' ? 'drop' : 'star');
       navigator.vibrate?.(nowChecked ? 30 : 8);
       onToggle(day, nowChecked);
       updateWeekTotal(weekDays(weekStart()).map(toDayKey), true);
@@ -384,9 +393,9 @@ function createBoard({ id, seed, animated, words }) {
   });
 
   // ---- Figures and the item card ----
-  /** The exercise figure, or the section's emoji when there is none. */
+  /** The exercise figure or habit icon, or the section's emoji when there is none. */
   function miniFigure(item, section) {
-    const svg = animated && figureSvg(item.exercise);
+    const svg = animated ? figureSvg(item.exercise) : iconSvg(item.icon);
     if (svg) return html('span', 'mini-fig', svg);
     return el('span', { className: 'mini-fig empty', ariaHidden: 'true' }, animated ? '⭐' : section.emoji);
   }
@@ -418,6 +427,7 @@ function createBoard({ id, seed, animated, words }) {
     let figure;
     if (ex) figure = html('div', 'hero-fig', figureSvg(item.exercise));
     else if (animated) figure = el('div', { className: 'hero-fig empty' }, el('span', { className: 'emoji' }, '⭐'), el('p', {}, 'No animation yet. Pick one in Edit exercises.'));
+    else if (ICONS[item.icon]) figure = html('div', 'hero-fig', iconSvg(item.icon));
     else figure = el('div', { className: 'hero-fig empty' }, el('span', { className: 'emoji' }, section.emoji));
 
     const parts = [
@@ -463,6 +473,7 @@ function createBoard({ id, seed, animated, words }) {
     const tab = self.tab;
     const fields = [{ name: 'name', label: 'Name', value: item?.name, required: true, placeholder: words.itemExample }];
     if (animated) fields.push({ name: 'exercise', label: 'Animation', value: item?.exercise ?? '', options: animationOptions() });
+    else fields.push({ name: 'icon', label: 'Icon', value: item?.icon ?? '', options: iconOptions() });
     if (item && activeSections(tab).length > 1) {
       fields.push({ name: 'sectionId', label: 'Section', value: section.id, options: activeSections(tab).map((s) => [s.id, `${s.emoji} ${s.name} · ${s.subtitle}`]) });
     }
@@ -474,8 +485,11 @@ function createBoard({ id, seed, animated, words }) {
       onSubmit: (v) => {
         if (item) return edit(layout.updateItem(tab, item.id, v));
         // A new exercise named like one in the library gets its animation automatically.
-        const match = animated && Object.keys(EXERCISES).find((ex) => EXERCISES[ex].name.toLowerCase() === v.name.toLowerCase());
-        edit(layout.addItem(tab, section.id, { ...v, exercise: v.exercise || match || undefined }, idsOnOtherTabs(self)));
+        // A new habit named like "Vitamins" gets the pill icon.
+        const values = animated
+          ? { ...v, exercise: v.exercise || Object.keys(EXERCISES).find((ex) => EXERCISES[ex].name.toLowerCase() === v.name.toLowerCase()) }
+          : { ...v, icon: v.icon || iconForName(v.name) };
+        edit(layout.addItem(tab, section.id, values, idsOnOtherTabs(self)));
       },
     });
   }

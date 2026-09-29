@@ -73,3 +73,11 @@ test('addItem avoids ids reserved by other tabs', () => {
   const t = layout.addItem(tab(), 'b', { name: 'Squat' }, ['squat']);
   assert.equal(t.sections[1].items[0].id, 'squat-2');
 });
+
+test('updateItem sets and clears a habit icon', () => {
+  let t = layout.updateItem(tab(), 'x', { icon: 'pill' });
+  assert.equal(layout.findItem(t, 'x').item.icon, 'pill');
+  t = layout.updateItem(t, 'x', { icon: '' });
+  assert.equal('icon' in layout.findItem(t, 'x').item, false);
+  assert.equal(layout.addItem(tab(), 'b', { name: 'Fish oil', icon: 'pill' }).sections[1].items[0].icon, 'pill');
+});
