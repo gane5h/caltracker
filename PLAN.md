@@ -123,6 +123,20 @@ The upper-body split into push and pull is confirmed.
 **Cardio — Treadmill**
 1. Brisk walk, 30 min
 
+**Diet** (same grid engine, lime accent)
+- Water — Hydration: Drink water
+- Meds — Daily: Take meds
+
+Diet rows are "habits": no figures or muscle map. Each habit can have a looping
+icon (`js/icons.js`) that also changes its check-in cell:
+- **Water glass:** the glass fills, splashes and gets a sip. Checking a cell fills it
+  with water and splashes droplets; undo drains it.
+- **Pill:** a capsule rocks and bounces. Cells are pill-box compartments: checking
+  flips the lid open and the pill hops out.
+
+Habits without an icon show the section's emoji. New habits get an icon from their
+name ("Vitamin D" → pill).
+
 Every exercise gets an original SVG figure animation with 2–4 keyframe poses,
 animated with CSS. The figures are built from simple parts (limbs,
 torso, a dumbbell), so new exercises are cheap to add.
@@ -162,6 +176,7 @@ js/app.js               rendering, tap handling, week nav, tabs
 js/data.js              starting sections and exercises
 js/exercises.js         exercise library: poses, muscles, form tips
 js/figures.js           figure rig, keyframe generator, muscle map
+js/icons.js             looping habit icons (water glass, pill)
 js/layout.js            pure edits: add, move, archive …
 js/backup.js            JSON export/import format
 js/store.js             check-ins in localStorage
@@ -187,7 +202,7 @@ fonts/, icons/          bundled assets
 7. **Ship to your phone:** GitHub Pages plus *Add to Home screen* (done early, since it's free).
    Optional: a daily reminder notification ("Don't break the chain! 🔥").
 
-Later: the Diet and Finances tabs (same grid engine), a home-screen widget,
+Later: the Finances tab (same grid engine), a home-screen widget,
 and optional cloud sync.
 
 ---
@@ -220,3 +235,6 @@ and optional cloud sync.
       only offers Periodic Background Sync, which fires when Chrome decides (often
       hours late), so it can't promise "remind me at 8pm"
 - [x] Milestone 7: GitHub Pages + installable PWA with offline support
+- [x] Diet tab: Water and Meds sections on the shared board engine, with its own
+      chain, streaks, trophies and edit mode. Item ids stay unique across tabs
+- [x] Diet animations: water glass and pill icons, water-fill and pill-box check-ins

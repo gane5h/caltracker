@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { fitnessTab } from '../js/data.js';
+import { dietTab, fitnessTab } from '../js/data.js';
 import * as layout from '../js/layout.js';
 
 const tab = () => ({
@@ -59,7 +59,25 @@ test('archiving hides but keeps things, and restoring brings them back', () => {
   assert.deepEqual(layout.setArchived(t, 'section', 'a', false), tab());
 });
 
-test('every seed item has a known animation', async () => {
+test('every seed animation is a known exercise', async () => {
   const { EXERCISES } = await import('../js/exercises.js');
-  for (const item of layout.everyItem(fitnessTab)) assert.ok(EXERCISES[item.exercise], item.id);
+  for (const item of layout.everyItem(fitnessTab).filter((it) => it.exercise)) assert.ok(EXERCISES[item.exercise], item.id);
+});
+
+test('seed item ids are unique across tabs', () => {
+  const all = [fitnessTab, dietTab].flatMap(layout.everyItem).map((it) => it.id);
+  assert.equal(new Set(all).size, all.length);
+});
+
+test('addItem avoids ids reserved by other tabs', () => {
+  const t = layout.addItem(tab(), 'b', { name: 'Squat' }, ['squat']);
+  assert.equal(t.sections[1].items[0].id, 'squat-2');
+});
+
+test('updateItem sets and clears a habit icon', () => {
+  let t = layout.updateItem(tab(), 'x', { icon: 'pill' });
+  assert.equal(layout.findItem(t, 'x').item.icon, 'pill');
+  t = layout.updateItem(t, 'x', { icon: '' });
+  assert.equal('icon' in layout.findItem(t, 'x').item, false);
+  assert.equal(layout.addItem(tab(), 'b', { name: 'Fish oil', icon: 'pill' }).sections[1].items[0].icon, 'pill');
 });

@@ -54,5 +54,5 @@ export function parseBackup(text) {
 export function describeBackup({ tabs, checkIns }) {
   const items = Object.values(tabs).reduce((n, t) => n + t.sections.reduce((m, s) => m + s.items.length, 0), 0);
   const days = Object.values(checkIns).reduce((n, d) => n + Object.keys(d).length, 0);
-  return `${items} exercise${items === 1 ? '' : 's'} and ${days} check-in${days === 1 ? '' : 's'}`;
+  return `${items} item${items === 1 ? '' : 's'} and ${days} check-in${days === 1 ? '' : 's'}`;
 }
